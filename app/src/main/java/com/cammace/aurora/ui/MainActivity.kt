@@ -24,7 +24,6 @@ import com.mapbox.mapboxsdk.plugins.places.autocomplete.ui.PlaceAutocompleteFrag
 import kotlinx.android.synthetic.main.activity_main.*
 import timber.log.Timber
 
-
 const val REQUEST_COARSE_LOCATION = 5678
 
 class MainActivity : AppCompatActivity() {
@@ -36,7 +35,7 @@ class MainActivity : AppCompatActivity() {
   private val weatherIconMap = HashMap<String, Drawable>()
 
   // Places autocomplete fragment
-  var placeAutoCompleteFragment: PlaceAutocompleteFragment? = null
+  private var placeAutoCompleteFragment: PlaceAutocompleteFragment? = null
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -61,8 +60,9 @@ class MainActivity : AppCompatActivity() {
   override fun onOptionsItemSelected(item: MenuItem?): Boolean {
     if (item?.itemId == R.id.action_search) {
       displayPlacesFragment()
+    } else if (item?.itemId == R.id.action_user_location) {
+      viewModel.getUsersCurrentLocation()
     }
-
     return super.onOptionsItemSelected(item)
   }
 
@@ -136,8 +136,6 @@ class MainActivity : AppCompatActivity() {
       }
     })
   }
-
-
 
   private fun requestPermissions() {
     ActivityCompat.requestPermissions(this,
