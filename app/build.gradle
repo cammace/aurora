@@ -11,6 +11,10 @@ android {
     versionCode 1
     versionName "0.1.0"
     testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+    buildConfigField( 'String', "MAPBOX_ACCESS_TOKEN", mapboxAccessToken)
+    buildConfigField( 'String', "DARKSKY_KEY", darkskyKey)
+
   }
   buildTypes {
     release {
@@ -50,6 +54,7 @@ dependencies {
 
   // API
   implementation 'com.squareup.retrofit2:retrofit:2.4.0'
+  implementation 'com.squareup.retrofit2:converter-gson:2.4.0'
   implementation 'com.google.code.gson:gson:2.8.5'
 
   // Misc
