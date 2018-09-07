@@ -4,7 +4,22 @@
   xmlns:tools="http://schemas.android.com/tools">
 
   <data>
-    <variable name="locationName" type="String" />
+
+    <import type="java.util.Map" />
+
+    <import type="android.graphics.drawable.Drawable" />
+
+    <variable
+      name="locationName"
+      type="String" />
+
+    <variable
+      name="currentCondition"
+      type="com.cammace.aurora.model.DarkskyModel.Currently" />
+
+    <variable
+      name="currentConditionIcon"
+      type="Drawable" />
   </data>
 
   <androidx.constraintlayout.widget.ConstraintLayout
@@ -13,11 +28,12 @@
     tools:context=".ui.MainActivity">
 
     <com.google.android.material.appbar.AppBarLayout
+      android:id="@+id/appBar_mainActivity"
       android:layout_width="match_parent"
       android:layout_height="wrap_content">
 
       <androidx.appcompat.widget.Toolbar
-        android:id="@+id/main_toolbar"
+        android:id="@+id/toolbar_mainActivity"
         style="@style/Widget.Aurora.Toolbar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize">
@@ -26,21 +42,82 @@
           android:layout_width="wrap_content"
           android:layout_height="wrap_content"
           android:layout_gravity="center"
-          android:textAppearance="@style/TextAppearance.Aurora.Toolbar"
           android:text="@{locationName}"
+          android:textAppearance="@style/TextAppearance.Aurora.Toolbar"
           tools:text="New York" />
       </androidx.appcompat.widget.Toolbar>
 
     </com.google.android.material.appbar.AppBarLayout>
 
+    <ImageView
+      android:id="@+id/imageView_mainActivity_weatherIcon"
+      android:layout_width="150dp"
+      android:layout_height="wrap_content"
+      android:layout_marginTop="8dp"
+      android:src="@{currentConditionIcon ?? @drawable/ic_weather_placeholder}"
+      app:layout_constraintDimensionRatio="W,1:1"
+      app:layout_constraintEnd_toEndOf="parent"
+      app:layout_constraintStart_toStartOf="parent"
+      app:layout_constraintTop_toBottomOf="@+id/appBar_mainActivity"
+      tools:src="@drawable/ic_weather_rain" />
+
     <TextView
+      android:id="@+id/textView_mainActivity_temp"
       android:layout_width="wrap_content"
       android:layout_height="wrap_content"
-      android:text="Hello World!"
-      app:layout_constraintBottom_toBottomOf="parent"
-      app:layout_constraintLeft_toLeftOf="parent"
-      app:layout_constraintRight_toRightOf="parent"
-      app:layout_constraintTop_toTopOf="parent" />
+      android:layout_marginEnd="144dp"
+      android:text='@{String.format("%.0f°", currentCondition.temperature) ?? "??°"}'
+      android:textAppearance="@style/TextAppearance.MaterialComponents.Headline3"
+      app:layout_constraintBottom_toTopOf="@+id/imageView_mainActivity_wind"
+      app:layout_constraintEnd_toEndOf="@+id/imageView_mainActivity_weatherIcon"
+      app:layout_constraintStart_toStartOf="@+id/imageView_mainActivity_weatherIcon"
+      app:layout_constraintTop_toBottomOf="@+id/imageView_mainActivity_precip"
+      tools:text="63°" />
+
+    <TextView
+      android:id="@+id/textView_mainActivity_wind"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:layout_marginStart="16dp"
+      android:text='@{String.format("%.0f%%", currentCondition.precipProbability * 100)}'
+      android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
+      app:layout_constraintBottom_toBottomOf="@+id/imageView_mainActivity_precip"
+      app:layout_constraintStart_toEndOf="@+id/imageView_mainActivity_precip"
+      app:layout_constraintTop_toTopOf="@+id/imageView_mainActivity_precip"
+      tools:text="25%" />
+
+    <TextView
+      android:id="@+id/textView_mainActivity_precip"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:layout_marginStart="16dp"
+      android:text='@{String.format("%.0f mph", currentCondition.windSpeed)}'
+      tools:text="13 mph"
+      android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
+      app:layout_constraintBottom_toBottomOf="@+id/imageView_mainActivity_wind"
+      app:layout_constraintStart_toEndOf="@+id/imageView_mainActivity_wind"
+      app:layout_constraintTop_toTopOf="@+id/imageView_mainActivity_wind" />
+
+    <ImageView
+      android:id="@+id/imageView_mainActivity_precip"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:layout_marginStart="72dp"
+      android:src="@drawable/ic_rain_chance"
+      app:layout_constraintEnd_toEndOf="@+id/imageView_mainActivity_weatherIcon"
+      app:layout_constraintStart_toStartOf="@+id/imageView_mainActivity_weatherIcon"
+      app:layout_constraintTop_toBottomOf="@+id/imageView_mainActivity_weatherIcon" />
+
+    <ImageView
+      android:id="@+id/imageView_mainActivity_wind"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:layout_marginStart="72dp"
+      android:layout_marginTop="16dp"
+      android:src="@drawable/ic_wind_speed"
+      app:layout_constraintEnd_toEndOf="@+id/imageView_mainActivity_weatherIcon"
+      app:layout_constraintStart_toStartOf="@+id/imageView_mainActivity_weatherIcon"
+      app:layout_constraintTop_toBottomOf="@+id/imageView_mainActivity_precip" />
 
   </androidx.constraintlayout.widget.ConstraintLayout>
 

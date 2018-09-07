@@ -28,7 +28,9 @@ interface DarkskyService {
   fun forecast(
     @Path("key") key: String,
     @Path("latitude") latitude: Double,
-    @Path("longitude") longitude: Double
+    @Path("longitude") longitude: Double,
+    @Query("units") units: String,
+    @Query("exclude") exclude: String
   ): Call<DarkskyModel.Darksky>
 
 }

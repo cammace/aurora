@@ -36,6 +36,7 @@ class MainActivityViewModel(application: Application) : AndroidViewModel(applica
 
   // LiveData
   val requestLocationPermissionLiveData = MutableLiveData<Boolean>()
+  val darkSkyApiResponseLiveData = MutableLiveData<DarkskyModel.Darksky>()
   val locationNameLiveData = MutableLiveData<String>()
 
   // Create the Retrofit instance
@@ -45,23 +46,28 @@ class MainActivityViewModel(application: Application) : AndroidViewModel(applica
   private val appContext = getApplication() as Context
 
   private fun fetchForecastAtUserLocation() {
-    forecastAdi.forecast(BuildConfig.DARKSKY_KEY, userLocation.latitude, userLocation.longitude).enqueue(object : Callback<DarkskyModel.Darksky> {
-      override fun onResponse(call: Call<DarkskyModel.Darksky>, response: Response<DarkskyModel.Darksky>) {
-        println(call.request().url().toString())
-        if (!response.isSuccessful || response.body() == null) {
-          Timber.e("Error trying to fetch the user's location forecast.")
-          // TODO display error message to the user
-          return
+    forecastAdi.forecast(
+      BuildConfig.DARKSKY_KEY,
+      userLocation.latitude,
+      userLocation.longitude,
+      "us",
+      arrayListOf("minutely", "hourly", "alerts", "flags").toString())
+      .enqueue(object : Callback<DarkskyModel.Darksky> {
+        override fun onResponse(call: Call<DarkskyModel.Darksky>, response: Response<DarkskyModel.Darksky>) {
+          Timber.v("API Url call ${call.request().url()}")
+          if (!response.isSuccessful || response.body() == null) {
+            Timber.e("Error trying to fetch the user's location forecast.")
+            // TODO display error message to the user
+            return
+          }
+          // Pass information to the view
+          darkSkyApiResponseLiveData.value = response.body()
         }
 
-        // TODO handle displaying the results
-
-      }
-
-      override fun onFailure(call: Call<DarkskyModel.Darksky>, throwable: Throwable) {
-        Timber.e(throwable, "Error trying to fetch the user's location forecast.")
-      }
-    })
+        override fun onFailure(call: Call<DarkskyModel.Darksky>, throwable: Throwable) {
+          Timber.e(throwable, "Error trying to fetch the user's location forecast.")
+        }
+      })
   }
 
   //
