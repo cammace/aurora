@@ -1,23 +1,29 @@
 package com.cammace.aurora.ui
 
 import android.Manifest
+import android.content.Context
 import android.content.pm.PackageManager
 import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
-import android.widget.Toast
+import android.view.inputmethod.InputMethodManager
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
+import com.cammace.aurora.BuildConfig
 import com.cammace.aurora.R
 import com.cammace.aurora.databinding.ActivityMainBinding
 import com.cammace.aurora.viewmodel.MainActivityViewModel
+import com.mapbox.api.geocoding.v5.GeocodingCriteria
+import com.mapbox.mapboxsdk.plugins.places.autocomplete.model.PlaceOptions
+import com.mapbox.mapboxsdk.plugins.places.autocomplete.ui.PlaceAutocompleteFragment
 import kotlinx.android.synthetic.main.activity_main.*
 import timber.log.Timber
+
 
 const val REQUEST_COARSE_LOCATION = 5678
 
@@ -28,6 +34,9 @@ class MainActivity : AppCompatActivity() {
 
   // Weather icon map
   private val weatherIconMap = HashMap<String, Drawable>()
+
+  // Places autocomplete fragment
+  var placeAutoCompleteFragment: PlaceAutocompleteFragment? = null
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -51,10 +60,52 @@ class MainActivity : AppCompatActivity() {
 
   override fun onOptionsItemSelected(item: MenuItem?): Boolean {
     if (item?.itemId == R.id.action_search) {
-      Toast.makeText(this, "search clicked", Toast.LENGTH_LONG).show()
+      displayPlacesFragment()
     }
 
     return super.onOptionsItemSelected(item)
+  }
+
+  override fun onBackPressed() {
+    if (placeAutoCompleteFragment != null && placeAutoCompleteFragment!!.isVisible) {
+      hidePlacesFragment()
+      return
+    }
+    super.onBackPressed()
+  }
+
+  private fun displayPlacesFragment() {
+    if (placeAutoCompleteFragment == null) {
+
+      val options = PlaceOptions.builder()
+        .toolbarColor(ContextCompat.getColor(this, R.color.materialGray_50))
+        .backgroundColor(ContextCompat.getColor(this, R.color.materialGray_50))
+        .geocodingTypes(GeocodingCriteria.TYPE_PLACE, GeocodingCriteria.TYPE_REGION)
+        .build()
+
+      window.statusBarColor = ContextCompat.getColor(this, R.color.materialGray_500)
+      placeAutoCompleteFragment = PlaceAutocompleteFragment.newInstance(BuildConfig.MAPBOX_ACCESS_TOKEN, options)
+      placeAutoCompleteFragment!!.setOnPlaceSelectedListener(viewModel)
+
+      val transaction = supportFragmentManager.beginTransaction()
+      transaction.add(R.id.fragment_container, placeAutoCompleteFragment!!, PlaceAutocompleteFragment.TAG)
+      transaction.commit()
+    } else {
+
+      showPlacesFragment()
+    }
+  }
+
+  private fun showPlacesFragment() {
+    window.statusBarColor = ContextCompat.getColor(this, R.color.materialGray_500)
+    supportFragmentManager.beginTransaction().show(placeAutoCompleteFragment!!).commit()
+  }
+
+  private fun hidePlacesFragment() {
+    window.statusBarColor = ContextCompat.getColor(this, R.color.colorPrimaryDark)
+    val inputMethod = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+    inputMethod.hideSoftInputFromWindow(textView_mainActivity_wind.windowToken, 0)
+    supportFragmentManager.beginTransaction().hide(placeAutoCompleteFragment!!).commit()
   }
 
   private fun addObservers() {
@@ -77,7 +128,16 @@ class MainActivity : AppCompatActivity() {
         binding.currentConditionIcon = weatherIconMap[darkSkyModel.currently.icon]
       }
     })
+
+    viewModel.userFinishedSearchLiveData.observe(this, Observer { canceled ->
+      Timber.v("User has canceled geocoding search.")
+      if (canceled && placeAutoCompleteFragment != null) {
+        hidePlacesFragment()
+      }
+    })
   }
+
+
 
   private fun requestPermissions() {
     ActivityCompat.requestPermissions(this,

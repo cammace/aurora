@@ -16,8 +16,10 @@ import com.google.android.gms.tasks.OnFailureListener
 import com.google.android.gms.tasks.OnSuccessListener
 import com.mapbox.api.geocoding.v5.GeocodingCriteria
 import com.mapbox.api.geocoding.v5.MapboxGeocoding
+import com.mapbox.api.geocoding.v5.models.CarmenFeature
 import com.mapbox.api.geocoding.v5.models.GeocodingResponse
 import com.mapbox.geojson.Point
+import com.mapbox.mapboxsdk.plugins.places.autocomplete.ui.PlaceSelectionListener
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -32,11 +34,13 @@ val NEW_YORK_LOCATION = Location("default").apply {
 }
 
 class MainActivityViewModel(application: Application) : AndroidViewModel(application),
-  OnSuccessListener<Location>, OnFailureListener, Callback<GeocodingResponse> {
+  OnSuccessListener<Location>, OnFailureListener, Callback<GeocodingResponse>,
+  PlaceSelectionListener {
 
   // LiveData
   val requestLocationPermissionLiveData = MutableLiveData<Boolean>()
   val darkSkyApiResponseLiveData = MutableLiveData<DarkskyModel.Darksky>()
+  val userFinishedSearchLiveData = MutableLiveData<Boolean>()
   val locationNameLiveData = MutableLiveData<String>()
 
   // Create the Retrofit instance
@@ -45,11 +49,11 @@ class MainActivityViewModel(application: Application) : AndroidViewModel(applica
   private var userLocation: Location = NEW_YORK_LOCATION
   private val appContext = getApplication() as Context
 
-  private fun fetchForecastAtUserLocation() {
+  private fun fetchForecastAtLocation(latitude: Double, longitude: Double) {
     forecastAdi.forecast(
       BuildConfig.DARKSKY_KEY,
-      userLocation.latitude,
-      userLocation.longitude,
+      latitude,
+      longitude,
       "us",
       arrayListOf("minutely", "hourly", "alerts", "flags").toString())
       .enqueue(object : Callback<DarkskyModel.Darksky> {
@@ -90,7 +94,7 @@ class MainActivityViewModel(application: Application) : AndroidViewModel(applica
       userLocation = location
       getLocationName()
     }
-    fetchForecastAtUserLocation()
+    fetchForecastAtLocation(userLocation.latitude, userLocation.longitude)
   }
 
   override fun onFailure(exception: Exception) {
@@ -129,5 +133,26 @@ class MainActivityViewModel(application: Application) : AndroidViewModel(applica
 
   override fun onFailure(call: Call<GeocodingResponse>, throwable: Throwable) {
     Timber.e(throwable, "Error trying to reverse geocode location")
+  }
+
+  override fun onPlaceSelected(carmenFeature: CarmenFeature?) {
+    if (carmenFeature == null) {
+      Timber.e("Place selected returned a null carmen feature.")
+      return
+    }
+
+    if (carmenFeature.center() != null) {
+      locationNameLiveData.value = carmenFeature.text()
+      fetchForecastAtLocation(carmenFeature.center()?.latitude()!!, carmenFeature.center()?.longitude()!!)
+    } else {
+      Timber.e("carmenFeature center's null.")
+      // TODO display error to user
+    }
+
+    userFinishedSearchLiveData.value = true
+  }
+
+  override fun onCancel() {
+    userFinishedSearchLiveData.value = true
   }
 }

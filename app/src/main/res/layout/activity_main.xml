@@ -27,6 +27,16 @@
     android:layout_height="match_parent"
     tools:context=".ui.MainActivity">
 
+    <FrameLayout
+      android:id="@+id/fragment_container"
+      android:layout_width="0dp"
+      android:layout_height="0dp"
+      android:elevation="12dp"
+      app:layout_constraintBottom_toBottomOf="parent"
+      app:layout_constraintEnd_toEndOf="parent"
+      app:layout_constraintStart_toStartOf="parent"
+      app:layout_constraintTop_toTopOf="@+id/appBar_mainActivity" />
+
     <com.google.android.material.appbar.AppBarLayout
       android:id="@+id/appBar_mainActivity"
       android:layout_width="match_parent"
