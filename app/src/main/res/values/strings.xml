@@ -1,3 +1,4 @@
 <resources>
   <string name="app_name">Aurora</string>
+  <string name="menuToolbar_searchTitle">Search</string>
 </resources>
