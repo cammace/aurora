@@ -7,6 +7,7 @@ import android.view.MenuItem
 import android.widget.Toast
 import androidx.databinding.DataBindingUtil
 import com.cammace.aurora.databinding.ActivityMainBinding
+import com.google.android.gms.location.LocationServices
 import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {
@@ -20,8 +21,13 @@ class MainActivity : AppCompatActivity() {
     // Setup toolbar and hide title
     setSupportActionBar(main_toolbar)
     supportActionBar?.setDisplayShowTitleEnabled(false)
-    
-    binding.locationName = "New York"
+
+    getUsersCurrentLocation()
+  }
+
+  private fun getUsersCurrentLocation() {
+    val fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+    fusedLocationClient.lastLocation.
   }
 
   override fun onCreateOptionsMenu(menu: Menu?): Boolean {
