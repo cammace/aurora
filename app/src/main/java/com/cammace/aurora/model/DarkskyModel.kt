@@ -10,8 +10,8 @@ object DarkskyModel {
 
   data class Currently(
     val time: Long,
-    val summary: String?,
-    val icon: String?,
+    val summary: String? = "",
+    val icon: String? = "",
     val nearestStormDistance: Int?,
     val nearestStormBearing: Int?,
     val precipIntensity: Double?,
