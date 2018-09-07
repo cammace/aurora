@@ -8,22 +8,32 @@ import android.location.Location
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
+import com.cammace.aurora.R
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.tasks.OnFailureListener
 import com.google.android.gms.tasks.OnSuccessListener
+import com.mapbox.api.geocoding.v5.GeocodingCriteria
+import com.mapbox.api.geocoding.v5.MapboxGeocoding
+import com.mapbox.api.geocoding.v5.models.GeocodingResponse
+import com.mapbox.geojson.Point
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 import timber.log.Timber
 import java.lang.Exception
 
+const val DEFAULT_LOCATION_NAME = "New York City"
 @JvmField val NEW_YORK_LOCATION = Location("default").apply {
   latitude = 40.6973
   longitude = -74.2195
 }
 
 class MainActivityViewModel(application: Application): AndroidViewModel(application),
-  OnSuccessListener<Location>, OnFailureListener {
+  OnSuccessListener<Location>, OnFailureListener, Callback<GeocodingResponse> {
 
   // LiveData
-  val requestLocationPermission = MutableLiveData<Boolean>()
+  val requestLocationPermissionLiveData = MutableLiveData<Boolean>()
+  val locationNameLiveData = MutableLiveData<String>()
 
   private var userLocation: Location = NEW_YORK_LOCATION
   private val appContext = getApplication() as Context
@@ -42,6 +52,7 @@ class MainActivityViewModel(application: Application): AndroidViewModel(applicat
   override fun onSuccess(location: Location?) {
     if (location == null) {
       Timber.v("User location's null, falling back to default location.")
+      locationNameLiveData.value = DEFAULT_LOCATION_NAME
     } else {
       Timber.v("User location: $location")
       userLocation = location
@@ -55,18 +66,35 @@ class MainActivityViewModel(application: Application): AndroidViewModel(applicat
 
   private fun checkUserLocationPermission(): Boolean {
     return if (ContextCompat.checkSelfPermission(appContext,
-        Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+        Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
       true
     } else {
-      requestLocationPermission.value = true
+      requestLocationPermissionLiveData.value = true
       false
     }
   }
 
-  /**
-   * Reverse geocode to get the city name to display.
-   */
+  //
+  // Reverse geocode
+  //
+
   private fun getLocationName() {
-    TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    MapboxGeocoding.builder()
+      .accessToken(appContext.getString(R.string.mapboxAccessToken))
+      .query(Point.fromLngLat(userLocation.longitude, userLocation.latitude))
+      .geocodingTypes(GeocodingCriteria.TYPE_PLACE)
+      .build().enqueueCall(this)
+  }
+
+  override fun onResponse(call: Call<GeocodingResponse>, response: Response<GeocodingResponse>) {
+    if (response.isSuccessful && response.body()!!.features().isNotEmpty()) {
+      Timber.v("Successfully reverse geocoded location")
+      Timber.v("Location name: ${response.body()?.features()!![0].text()}")
+      locationNameLiveData.value = response.body()?.features()!![0].text()
+    }
+  }
+
+  override fun onFailure(call: Call<GeocodingResponse>, throwable: Throwable) {
+    Timber.e(throwable, "Error trying to reverse geocode location")
   }
 }

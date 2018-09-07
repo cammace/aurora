@@ -51,10 +51,14 @@ class MainActivity : AppCompatActivity() {
   }
 
   private fun addObservers() {
-    viewModel.requestLocationPermission.observe(this, Observer { shouldRequestPermission ->
+    viewModel.requestLocationPermissionLiveData.observe(this, Observer { shouldRequestPermission ->
       if (shouldRequestPermission) {
+        Timber.v("requesting permission")
         requestPermissions()
       }
+    })
+    viewModel.locationNameLiveData.observe(this, Observer { locationName ->
+      binding.locationName = locationName
     })
   }
 
