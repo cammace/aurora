@@ -14,9 +14,11 @@ import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.cammace.aurora.BuildConfig
 import com.cammace.aurora.R
 import com.cammace.aurora.databinding.ActivityMainBinding
+import com.cammace.aurora.utils.WeatherIcons
 import com.cammace.aurora.viewmodel.MainActivityViewModel
 import com.mapbox.api.geocoding.v5.GeocodingCriteria
 import com.mapbox.mapboxsdk.plugins.places.autocomplete.model.PlaceOptions
@@ -31,11 +33,13 @@ class MainActivity : AppCompatActivity() {
   private lateinit var binding: ActivityMainBinding
   private lateinit var viewModel: MainActivityViewModel
 
-  // Weather icon map
-  private val weatherIconMap = HashMap<String, Drawable>()
+  private var weatherIconMap: Map<String, Drawable>? = null
 
   // Places autocomplete fragment
   private var placeAutoCompleteFragment: PlaceAutocompleteFragment? = null
+
+  // 5 day forecast adapter
+  private val adapter = DailyForecastAdapter()
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -47,9 +51,12 @@ class MainActivity : AppCompatActivity() {
     setSupportActionBar(toolbar_mainActivity)
     supportActionBar?.setDisplayShowTitleEnabled(false)
 
-    mapWeatherIcons()
+    weatherIconMap = WeatherIcons.map(this)
 
     viewModel.getUsersCurrentLocation()
+
+    recyclerView_mainActivity_dailyForecast.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
+    recyclerView_mainActivity_dailyForecast.adapter = adapter
   }
 
   override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -123,9 +130,11 @@ class MainActivity : AppCompatActivity() {
     viewModel.darkSkyApiResponseLiveData.observe(this, Observer { darkSkyModel ->
       binding.currentCondition = darkSkyModel.currently
 
+      adapter.setDayForecast(darkSkyModel.daily.data)
+
       // Bind the current weather icon
-      if (darkSkyModel.currently.icon != null) {
-        binding.currentConditionIcon = weatherIconMap[darkSkyModel.currently.icon]
+      if (darkSkyModel.currently.icon != null && weatherIconMap != null) {
+        binding.currentConditionIcon = weatherIconMap!![darkSkyModel.currently.icon]
       }
     })
 
@@ -150,21 +159,5 @@ class MainActivity : AppCompatActivity() {
     } else {
       Timber.v("User refused to give location permission. Continue using the default location.")
     }
-  }
-
-  /**
-   * Since the Dark Sky API response icon doesn't directly map to our drawables, we have to do so manually.
-   */
-  private fun mapWeatherIcons() {
-    weatherIconMap["clear-day"] = ContextCompat.getDrawable(this, R.drawable.ic_weather_clear_day)!!
-    weatherIconMap["clear-night"] = ContextCompat.getDrawable(this, R.drawable.ic_weather_clear_night)!!
-    weatherIconMap["rain"] = ContextCompat.getDrawable(this, R.drawable.ic_weather_rain)!!
-    weatherIconMap["snow"] = ContextCompat.getDrawable(this, R.drawable.ic_weather_snow)!!
-    weatherIconMap["sleet"] = ContextCompat.getDrawable(this, R.drawable.ic_weather_sleet)!!
-    weatherIconMap["wind"] = ContextCompat.getDrawable(this, R.drawable.ic_weather_wind)!!
-    weatherIconMap["fog"] = ContextCompat.getDrawable(this, R.drawable.ic_weather_fog)!!
-    weatherIconMap["cloudy"] = ContextCompat.getDrawable(this, R.drawable.ic_weather_cloudy)!!
-    weatherIconMap["partly-cloudy-day"] = ContextCompat.getDrawable(this, R.drawable.ic_weather_partly_cloudy_day)!!
-    weatherIconMap["partly-cloudy-night"] = ContextCompat.getDrawable(this, R.drawable.ic_weather_party_cloudy_night)!!
   }
 }

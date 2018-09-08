@@ -6,9 +6,16 @@ object DarkskyModel {
     val latitude: Double,
     val longitude: Double,
     val timezone: String,
-    val currently: Currently)
+    val currently: Data,
+    val daily: Daily)
 
-  data class Currently(
+  data class Daily(
+    val summary: String?,
+    val icon: String?,
+    val data: MutableList<Data>
+  )
+
+  data class Data(
     val time: Long,
     val summary: String? = "",
     val icon: String? = "",

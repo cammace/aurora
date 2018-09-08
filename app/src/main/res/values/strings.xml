@@ -2,6 +2,7 @@
   <string name="app_name" tools:ignore="PrivateResource">Aurora</string>
 
   <string name="menuToolbar_searchTitle">Search</string>
+  <string name="mainActivity_weeklyForecast">Weekly forecast</string>
 
 
 </resources>
